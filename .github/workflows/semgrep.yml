@@ -1,0 +1,57 @@
+# .github/workflows/semgrep‐daily‐with‐manual.yml
+
+name: Semgrep Daily Scan (with Manual Trigger)
+
+on:
+  schedule:
+    # If you want this to run once per day at 13:17 Oslo time (UTC+2),
+    # convert to UTC: 13:17 CEST = 11:17 UTC
+    - cron: '17 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  security-events: write
+
+jobs:
+  semgrep-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v3
+        with:
+          ref: master
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Semgrep
+        run: |
+          python -m pip install --upgrade pip
+          pip install semgrep
+
+      - name: Clone custom Semgrep rules
+        run: |
+          git clone https://github.com/your-username/semgrep-rules.git /tmp/semgrep-rules
+
+      - name: Run Semgrep scan (SARIF)
+        id: run-semgrep
+        run: |
+          semgrep \
+            --config /tmp/semgrep-rules/javascript \
+            --metrics=off \
+            --sarif semgrep-results.sarif \
+            .
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-results.sarif
+
+      - name: Upload Semgrep JSON report
+        uses: actions/upload-artifact@v3
+        with:
+          name: semgrep-report
+          path: semgrep-results.sarif
