@@ -24,25 +24,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js (for package-lock.json → node_modules)
+      - name: Set up Node.js (for package scanning)
         uses: actions/setup-node@v3
         with:
-          node-version: '18'       # or whatever version your project uses
+          node-version: '18'
 
       - name: Install dependencies
         run: |
-          npm ci                   # ensures package-lock.json and node_modules exist
+          npm install
 
       - name: Scan for CVEs (library+OS) and secrets
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
           scanners: vuln,secret
-          vuln-type: library,os     # scan both OS packages and JS libraries
-          input: .                  # look at the entire repo
+          vuln-type: library,os
+          input: .
           format: sarif
           output: trivy-full.sarif
-          severity: CRITICAL,HIGH   # only fail/report on CRITICAL/HIGH
+          severity: CRITICAL,HIGH
 
       - name: Upload Trivy SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
