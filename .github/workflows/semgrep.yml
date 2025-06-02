@@ -35,7 +35,7 @@ jobs:
 
       - name: Clone custom Semgrep rules
         run: |
-          git clone https://github.com/your-username/semgrep-rules.git /tmp/semgrep-rules
+          git clone https://github.com/semgrep/semgrep-rules.git /tmp/semgrep-rules
 
       - name: Run Semgrep scan (SARIF)
         id: run-semgrep
