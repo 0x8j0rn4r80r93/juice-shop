@@ -1,6 +1,6 @@
-# .github/workflows/trivy-vuln-and-secrets.yml
+# .github/workflows/trivy-full-scan.yml
 
-name: Trivy Vulnerabilities (packages) & Secrets Scan
+name: Trivy Vulnerabilities + Secrets Scan
 
 on:
   push:
@@ -17,23 +17,32 @@ permissions:
   security-events: write
 
 jobs:
-  trivy-scan:
+  trivy-full-scan:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Scan for vulnerabilities and secrets
+      - name: Set up Node.js (for package-lock.json → node_modules)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'       # or whatever version your project uses
+
+      - name: Install dependencies
+        run: |
+          npm ci                   # ensures package-lock.json and node_modules exist
+
+      - name: Scan for CVEs (library+OS) and secrets
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
-          security-checks: vuln,secret
+          scanners: vuln,secret
+          vuln-type: library,os     # scan both OS packages and JS libraries
+          input: .                  # look at the entire repo
           format: sarif
           output: trivy-full.sarif
-          # By default, Trivy will infer your project’s package manifests
-          # (e.g. package.json/package-lock.json) and inspect node_modules for known CVEs.
-          # The “secret” scanner will also look for high-entropy strings/API keys in your files.
+          severity: CRITICAL,HIGH   # only fail/report on CRITICAL/HIGH
 
       - name: Upload Trivy SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
