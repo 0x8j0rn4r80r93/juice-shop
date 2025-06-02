@@ -13,7 +13,10 @@ permissions:
 jobs:
   semgrep-scan:
     runs-on: ubuntu-latest
-
+    env:
+      ACTIONS_RUNNER_DEBUG: true
+      ACTIONS_STEP_DEBUG: true
+      
     steps:
       - name: Checkout master
         uses: actions/checkout@v3
