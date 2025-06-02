@@ -40,10 +40,11 @@ jobs:
       - name: Run Semgrep scan (SARIF)
         id: run-semgrep
         run: |
+          set -x
           semgrep \
             --config /tmp/semgrep-rules/javascript \
             --metrics=off \
-            --sarif semgrep-results.sarif \
+            --sarif=semgrep-results.sarif \
             .
 
       - name: Upload SARIF to GitHub Security
