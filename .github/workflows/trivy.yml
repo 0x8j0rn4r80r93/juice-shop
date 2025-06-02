@@ -1,6 +1,6 @@
-# .github/workflows/trivy-full-scan.yml
+# .github/workflows/trivy-full-sarif.yml
 
-name: Trivy Vulnerabilities + Secrets Scan
+name: Trivy Vulnerabilities & Secrets (dual SARIF)
 
 on:
   push:
@@ -17,34 +17,55 @@ permissions:
   security-events: write
 
 jobs:
-  trivy-full-scan:
+  trivy-full-sarif:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js (for package scanning)
+      - name: Set up Node.js (for package scanner)
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install dependencies
+      - name: Install dependencies (so Trivy can see package-lock.json & node_modules)
         run: |
           npm install
 
-      - name: Scan for CVEs (library+OS) and secrets
+      # --------------------------
+      # Part A: Vulnerability scan
+      # --------------------------
+      - name: Scan for vulnerabilities (CVEs) → vuln SARIF
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
-          scanners: vuln,secret
+          scanners: vuln
           vuln-type: library,os
           input: .
-          format: sarif
-          output: trivy-full.sarif
+          format: sarif       # default built-in SARIF template for vulnerabilities
+          output: trivy-vuln.sarif
           severity: CRITICAL,HIGH
 
-      - name: Upload Trivy SARIF to GitHub Security tab
+      - name: Upload CVE SARIF to GitHub Security (Vulnerability Alerts)
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: trivy-full.sarif
+          sarif_file: trivy-vuln.sarif
+
+      # ----------------------
+      # Part B: Secret scan
+      # ----------------------
+      - name: Scan for secrets → secret SARIF
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scanners: secret
+          input: .
+          format: template
+          template: '.github/trivy-secret.tpl'
+          output: trivy-secret.sarif
+
+      - name: Upload Secret SARIF to GitHub Security (Secret scanning)
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-secret.sarif
