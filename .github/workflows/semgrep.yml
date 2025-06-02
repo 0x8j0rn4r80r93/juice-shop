@@ -1,11 +1,9 @@
 # .github/workflows/semgrep‐daily‐with‐manual.yml
 
-name: Semgrep Daily Scan (with Manual Trigger)
+name: Semgrep Scan
 
 on:
   schedule:
-    # If you want this to run once per day at 13:17 Oslo time (UTC+2),
-    # convert to UTC: 13:17 CEST = 11:17 UTC
     - cron: '17 11 * * *'
   workflow_dispatch:
 
@@ -51,7 +49,7 @@ jobs:
           sarif_file: semgrep-results.sarif
 
       - name: Upload Semgrep JSON report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: semgrep-report
           path: semgrep-results.sarif
