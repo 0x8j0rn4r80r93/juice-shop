@@ -41,10 +41,11 @@ jobs:
         id: run-semgrep
         run: |
           set -x
-          semgrep \
+          semgrep scan \
             --config /tmp/semgrep-rules/javascript \
             --metrics=off \
-            --sarif=semgrep-results.sarif \
+            --sarif \
+            --sarif-output=semgrep-results.sarif \
             .
 
       - name: Upload SARIF to GitHub Security
